@@ -63,6 +63,7 @@ def get_next_questions(
     base_filters = [
         QuestionModel.subject_id == subject_id,
         QuestionModel.deleted == False,  # noqa
+        QuestionModel.status == "approved",
     ]
     if module_id is not None:
         base_filters.append(QuestionModel.module_id == module_id)
@@ -144,6 +145,7 @@ def create_quiz_session(
     excluded_ids = {qid for (qid,) in recent_attempts}
 
     base_filters = [QuestionModel.subject_id == subject_id, QuestionModel.deleted == False]  # noqa
+    base_filters.append(QuestionModel.status == "approved")
     if module_id is not None:
         base_filters.append(QuestionModel.module_id == module_id)
     if excluded_ids:

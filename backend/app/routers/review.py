@@ -32,6 +32,7 @@ def review_today(user_id: int, db: Session = Depends(get_db)):
         db.query(Question)
         .filter(Question.id.in_(qids))
         .filter(Question.deleted == False) 
+        .filter(Question.status == "approved")
         .all()
     )
     qmap = {q.id: q for q in questions}
@@ -71,6 +72,7 @@ def review_next(user_id: int, limit: int = 10, db: Session = Depends(get_db)):
         db.query(Question)
         .filter(Question.id.in_(qids))
         .filter(Question.deleted == False)
+        .filter(Question.status == "approved")
         .all()
     )
     qmap = {q.id: q for q in questions}
@@ -94,6 +96,8 @@ def review_submit(data: ReviewSubmitIn, db: Session = Depends(get_db)):
 
     question = db.query(Question).filter(Question.id == data.question_id).first()
     if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+    if question.status != "approved":
         raise HTTPException(status_code=404, detail="Question not found")
 
     meta = (
