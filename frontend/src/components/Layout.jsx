@@ -148,7 +148,7 @@ async function onLogout() {
         </header>
       )}
 
-      <main style={{shell, paddingTop: "24px"}}>{children}</main>
+      <main className="app-container" style={{paddingTop: "24px"}}>{children}</main>
     </div>
   );
 }
