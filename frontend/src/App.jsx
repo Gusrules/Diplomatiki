@@ -22,6 +22,11 @@ import SubjectQuizPage from "./pages/SubjectQuizPage.jsx";
 import TeacherSubjectsPage from "./pages/TeacherSubjectsPage.jsx";
 import TeacherSubjectPage from "./pages/TeacherSubjectPage.jsx";
 import TeacherSubjectStatsPage from "./pages/TeacherSubjectStatsPage.jsx";
+import TeacherReportsHubPage from "./pages/TeacherReportsHubPage.jsx";
+import RegisterPage from "./pages/RegisterPage.jsx";
+import ChangePasswordPage from "./pages/ChangePasswordPage.jsx";
+import TeacherQuestionsDistributionPage from "./pages/TeacherQuestionsDistributionPage.jsx";
+
 
 function RoleLanding() {
   const role = getRole();
@@ -36,6 +41,7 @@ export default function App() {
       <Routes>
           <Route path="/" element={<RoleLanding />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
           {/* Student protected */}
           <Route
@@ -47,6 +53,15 @@ export default function App() {
             }
           />
 
+          <Route
+            path="/change-password"
+            element={
+              <RequireAuth>
+                <ChangePasswordPage />
+              </RequireAuth>
+            }
+          />
+          
           <Route
             path="/subjects"
             element={
@@ -161,6 +176,24 @@ export default function App() {
             element={
               <RequireRole role="teacher">
                 <TeacherSubjectsPage />
+              </RequireRole>
+            }
+          />
+
+          <Route
+            path="/t/reports"
+            element={
+              <RequireRole role="teacher">
+                <TeacherReportsHubPage />
+              </RequireRole>
+            }
+          />
+
+          <Route
+            path="/t/questions/subject/:subjectId/distribution"
+            element={
+              <RequireRole role="teacher">
+                <TeacherQuestionsDistributionPage />
               </RequireRole>
             }
           />

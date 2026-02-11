@@ -8,17 +8,45 @@ export default function TeacherSubjectPage() {
   const [subject, setSubject] = useState(null);
   const [modules, setModules] = useState([]);
   const [err, setErr] = useState("");
+  const [accessMode, setAccessMode] = useState("public");
+  const [inviteCode, setInviteCode] = useState("");
 
   async function load() {
     try {
       setErr("");
       const s = await api.getSubjectFromList(subjectId);
       setSubject(s);
+      const mode = (s?.access_mode || "public").toLowerCase();
+      setAccessMode(mode);
+      setInviteCode(s?.invite_code || "");
       const mods = await api.listModulesBySubject(subjectId);
       setModules(mods || []);
     } catch (e) {
       setErr(e.message);
     }
+  }
+
+  async function saveAccess() {
+    try {
+      setErr("");
+      const payload = { access_mode: accessMode };
+      if (accessMode === "invite") payload.invite_code = inviteCode.trim() || null;
+
+      const out = await api.updateSubjectAccess(subjectId, payload);
+
+      setSubject(out);
+      setAccessMode((out.access_mode || "public").toLowerCase());
+      setInviteCode(out.invite_code || "");
+      setErr("✅ Access settings saved.");
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
+
+  function genCode() {
+    // απλό client-side generate (ή άστο στο backend)
+    const code = Math.random().toString(36).slice(2, 10).toUpperCase();
+    setInviteCode(code);
   }
 
   useEffect(() => {
@@ -51,24 +79,38 @@ export default function TeacherSubjectPage() {
         </Link>
       </div>
 
-      <h3 style={{ marginBottom: 0 }}>Modules</h3>
-      {modules.length === 0 ? (
-        <div style={{ color: "#666" }}>No modules yet.</div>
-      ) : (
-        <div style={{ display: "grid", gap: 10 }}>
-          {modules.map((m) => (
-            <div key={m.id} className="card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <div style={{ fontWeight: 900 }}>{m.title}</div>
-                <div style={{ color: "#666" }}>{m.description || ""}</div>
-              </div>
-              <Link className="btn" to={`/resources/${m.id}`}>
-                Open
-              </Link>
-            </div>
-          ))}
+      <div className="card" style={{ display: "grid", gap: 10 }}>
+        <div style={{ fontWeight: 900 }}>Access settings</div>
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <label style={{ display: "grid", gap: 6 }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,.65)" }}>Mode</span>
+            <select value={accessMode} onChange={(e) => setAccessMode(e.target.value)}>
+              <option value="public">public</option>
+              <option value="private">private</option>
+              <option value="invite">invite</option>
+            </select>
+          </label>
+
+          {accessMode === "invite" && (
+            <label style={{ display: "grid", gap: 6 }}>
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,.65)" }}>Invite code</span>
+              <input value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} placeholder="Code" />
+            </label>
+          )}
         </div>
-      )}
+
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          {accessMode === "invite" && (
+            <button className="btn" onClick={genCode}>
+              Generate code
+            </button>
+          )}
+          <button className="btn btn-primary" onClick={saveAccess}>
+            Save
+          </button>
+        </div>
+      </div>
 
       <Toast message={err} onClose={() => setErr("")} />
     </div>

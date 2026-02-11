@@ -12,8 +12,10 @@ export default function FlashcardsPage() {
   const [activeSetIndex, setActiveSetIndex] = useState(0);
 
   const [i, setI] = useState(0);
-  const [showBack, setShowBack] = useState(false);
   const [err, setErr] = useState("");
+  const [flipped, setFlipped] = useState(false);
+  const [animKey, setAnimKey] = useState(0);
+
 
   useEffect(() => {
     api
@@ -23,7 +25,6 @@ export default function FlashcardsPage() {
         setSets(Array.isArray(res) ? res : []);
         setActiveSetIndex(0);
         setI(0);
-        setShowBack(false);
       })
       .catch((e) => setErr(e.message));
   }, [moduleId]);
@@ -36,6 +37,13 @@ export default function FlashcardsPage() {
 
   return (
     <div>
+      <button
+        className="btn"
+        onClick={() => window.history.back()}
+        style={{ marginBottom: 10 }}
+      >
+        ← Back to module
+      </button>
       <h2>Flashcards — Module #{moduleId}</h2>
 
       <InfoBox title="Flashcards">
@@ -50,67 +58,97 @@ export default function FlashcardsPage() {
         <>
           {/* choose set */}
           <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <label style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              Set:
-              <select
-                value={activeSetIndex}
-                onChange={(e) => {
-                  const idx = Number(e.target.value);
-                  setActiveSetIndex(idx);
-                  setI(0);
-                  setShowBack(false);
-                }}
-              >
-                {sets.map((s, idx) => (
-                  <option key={s.resource_id} value={idx}>
-                    #{s.resource_id} — {s.title} ({s.flashcards?.length || 0} cards)
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 10 }}>
+              <span className="badge">
+                Flashcards
+              </span>
 
-          {/* header */}
-          <div style={{ color: "#666", marginTop: 6 }}>
-            resource_id: {activeSet.resource_id} — {activeSet.title}
+              <div style={{ fontWeight: 800 }}>
+                {activeSet.title}
+              </div>
+
+              <span className="badge">
+                {cards.length} cards
+              </span>
+            </div>
           </div>
 
           {/* cards */}
           {cards.length === 0 ? (
             <div style={{ marginTop: 10 }}>This set has no flashcards.</div>
           ) : (
-            <div style={{ marginTop: 16 }}>
-              <div style={{ border: "1px solid #eee", borderRadius: 12, padding: 18, minHeight: 140 }}>
-                <div style={{ fontWeight: 800, marginBottom: 8 }}>
-                  Card {i + 1}/{cards.length}
+            <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
+              {/* FLIP CARD */}
+              <div className="flashcard-wrap">
+                <div
+                  key={animKey}
+                  className={`flashcard flashcard-anim ${flipped ? "is-flipped" : ""}`}
+                  onClick={() => setFlipped((v) => !v)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") setFlipped((v) => !v);
+                  }}
+                  title="Click to flip"
+                  style={{ cursor: "pointer" }}
+                >
+                  {/* FRONT */}
+                  <div className="flashcard-face front">
+                    <div className="flashcard-kicker">Front</div>
+                    <div className="flashcard-text">{card?.front || ""}</div>
+                    <div className="flashcard-progress" style={{ marginTop: 12 }}>
+                      Card {i + 1}/{cards.length}
+                    </div>
+                  </div>
+
+                  {/* BACK */}
+                  <div className="flashcard-face back">
+                    <div className="flashcard-kicker">Back</div>
+                    <div className="flashcard-text">{card?.back || ""}</div>
+                    <div className="flashcard-progress" style={{ marginTop: 12 }}>
+                      Card {i + 1}/{cards.length}
+                    </div>
+                  </div>
                 </div>
-                <div style={{ fontSize: 18 }}>{showBack ? card.back : card.front}</div>
               </div>
 
-              <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-                <button onClick={() => setShowBack((v) => !v)}>{showBack ? "Show front" : "Show back"}</button>
-
-                <button
-                  onClick={() => {
-                    setI((v) => Math.max(0, v - 1));
-                    setShowBack(false);
-                  }}
-                  disabled={i === 0}
-                >
-                  Prev
+              {/* ACTIONS */}
+              <div className="flashcard-actions">
+                <button className="btn" onClick={() => setFlipped((v) => !v)}>
+                  {flipped ? "Show front" : "Show back"}
                 </button>
 
-                <button
-                  onClick={() => {
-                    setI((v) => Math.min(cards.length - 1, v + 1));
-                    setShowBack(false);
-                  }}
-                  disabled={i === cards.length - 1}
-                >
-                  Next
-                </button>
+                <div style={{ flex: 1 }} />
+
+                <div className="flashcard-nav">
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      setI((v) => Math.max(0, v - 1));
+                      setFlipped(false);
+                      setAnimKey((k) => k + 1);
+                    }}
+                    disabled={i === 0}
+                  >
+                    Prev
+                  </button>
+
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setI((v) => Math.min(cards.length - 1, v + 1));
+                      setFlipped(false);
+                      setAnimKey((k) => k + 1);
+                    }}
+                    disabled={i === cards.length - 1}
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
+
+
           )}
         </>
       )}

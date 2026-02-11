@@ -57,18 +57,15 @@ export default function ReviewPage() {
       if (!current) return;
       if (selected === null) throw new Error("Choose an answer first.");
 
-      // Backend στέλνει συνήθως correct_index (ή correct_choice_index).
-      // Θα το χειριστούμε με fallback.
       const correctIndex =
         current.correct_index ??
         current.correct_choice_index ??
         current.answer_index ??
         null;
 
-      // Αν δεν έχουμε correct index από backend, δεν μπορούμε να κάνουμε auto-grade.
       if (correctIndex === null || correctIndex === undefined) {
         throw new Error(
-          "This review endpoint did not return the correct answer index. We need to include correct_index in /review/today output."
+          "Review endpoint did not return correct_index. Add correct_index to /review/today output."
         );
       }
 
@@ -76,12 +73,11 @@ export default function ReviewPage() {
       setChecked(true);
       setIsCorrect(ok);
 
-      // ✅ SM-2 mapping για MCQ:
       const quality = ok ? 1 : 0;
 
       const out = await api.reviewSubmit({
         user_id: Number(userId),
-        question_id: Number(current.question_id ?? current.id),
+        question_id: Number(current.question_id),
         quality,
       });
 
@@ -92,13 +88,23 @@ export default function ReviewPage() {
   }
 
   async function next() {
-    // Προχωράμε στην επόμενη (χωρίς απαραίτητα reload)
     if (idx + 1 < items.length) {
       setIdx(idx + 1);
       resetQuestionState();
-    } else {
-      // Τέλος: ξαναφόρτωσε για να δεις αν έμεινε κάτι due
-      await load();
+      return;
+    }
+    // τέλος: auto-refresh για να δεις αν έμεινε κάτι due
+    await load();
+  }
+
+  function fmtNextReview(v) {
+    if (!v) return "-";
+    try {
+      const d = new Date(v);
+      if (Number.isNaN(d.getTime())) return String(v);
+      return d.toLocaleString();
+    } catch {
+      return String(v);
     }
   }
 
@@ -107,26 +113,15 @@ export default function ReviewPage() {
       <h2>Daily Review</h2>
 
       <InfoBox title="Spaced repetition (SM-2)">
-        <div>Shows questions that are due today (next_review ≤ today).</div>
-        <div>
-          You answer the question and the system updates SM-2 automatically.
-        </div>
+        <div>Shows questions that are due (next_review ≤ today).</div>
+        <div>You answer and the system updates SM-2 automatically.</div>
       </InfoBox>
-
-      <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-        <button className="btn" onClick={load}>
-          Reload
-        </button>
-        <div style={{ color: "#666" }}>
-          user #{userId ?? "?"}
-        </div>
-      </div>
 
       {items.length === 0 ? (
         <div className="card">
           <div style={{ fontWeight: 900 }}>No cards due today 🎉</div>
-          <div style={{ color: "#666", marginTop: 6 }}>
-            Come back tomorrow or practice a module quiz.
+          <div style={{ color: "rgba(255,255,255,.7)", marginTop: 6 }}>
+            Come back tomorrow or practice an adaptive quiz.
           </div>
         </div>
       ) : (
@@ -137,9 +132,7 @@ export default function ReviewPage() {
             </div>
           </div>
 
-          <div style={{ fontWeight: 800 }}>
-            {current?.prompt}
-          </div>
+          <div style={{ fontWeight: 800 }}>{current?.prompt}</div>
 
           <div style={{ display: "grid", gap: 8 }}>
             {(current?.choices || []).map((c, i) => (
@@ -157,16 +150,18 @@ export default function ReviewPage() {
           </div>
 
           {checked && (
-            <div style={{ color: isCorrect ? "green" : "crimson", fontWeight: 800 }}>
+            <div style={{ color: isCorrect ? "#16a34a" : "#ef4444", fontWeight: 800 }}>
               {isCorrect ? "✅ Correct" : "❌ Wrong"}
             </div>
           )}
 
           {checked && lastResult && (
-            <div style={{ color: "#666" }}>
-              Updated: next_review={String(lastResult.next_review)} ef={String(lastResult.ef)} interval={String(
-                lastResult.interval
-              )} reps={String(lastResult.repetitions)}
+            <div style={{ color: "rgba(255,255,255,.75)", fontSize: 13 }}>
+              Updated: next_review_at={fmtNextReview(lastResult.next_review_at)}{" "}
+              | EF={String(lastResult.easiness_factor)}{" "}
+              | interval_days={String(lastResult.interval_days)}{" "}
+              | reps={String(lastResult.repetitions)}{" "}
+              | status={String(lastResult.status)}
             </div>
           )}
 

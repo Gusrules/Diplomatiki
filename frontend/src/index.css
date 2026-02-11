@@ -22,10 +22,13 @@ a:hover {
   color: #535bf2;
 }
 
+/*
+  The default Vite template centers the whole app with `display:flex; place-items:center`.
+  That can break sticky headers (our Layout top bar) and produce odd scrolling behavior.
+  Use a normal document flow instead.
+*/
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
 }
@@ -56,16 +59,17 @@ button:focus-visible {
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #0b0f17; /* keep dark */
   }
   a:hover {
     color: #747bff;
   }
   button {
-    background-color: #f9f9f9;
+    background-color: #1a1a1a;
   }
 }
+
 
 /* --- FORCE RESET FOR VITE DEFAULTS --- */
 #root {
@@ -93,4 +97,108 @@ main {
   margin-top: 0 !important;
 }
 
+html, body {
+  background: #0b0f17 !important;
+}
 
+
+/* Global dropdown styling (dark UI) */
+select {
+  background: rgba(20, 28, 44, 0.95);
+  color: rgba(255,255,255,0.92);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+select:focus {
+  border-color: rgba(255,255,255,0.28);
+}
+
+/* IMPORTANT: options list */
+select option {
+  background: rgb(15, 20, 30);
+  color: rgba(255,255,255,0.92);
+}
+
+/* ===========================
+   Flashcard 3D flip
+   =========================== */
+
+.flashcard-wrap {
+  perspective: 1200px;
+}
+
+.flashcard {
+  position: relative;
+  width: 100%;
+  min-height: 210px;
+  transform-style: preserve-3d;
+  transition: transform 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  border-radius: 16px;
+}
+
+.flashcard.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 16px;
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(20,30,45,0.75), rgba(10,15,25,0.75));
+  box-shadow:
+    0 16px 35px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.flashcard-face.back {
+  transform: rotateY(180deg);
+}
+
+.flashcard-kicker {
+  font-size: 12px;
+  color: rgba(255,255,255,0.65);
+  letter-spacing: 0.02em;
+  margin-bottom: 10px;
+}
+
+.flashcard-text {
+  font-size: 18px;
+  line-height: 1.55;
+  color: rgba(255,255,255,0.92);
+  white-space: pre-wrap;
+}
+
+.flashcard-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  align-items: center;
+}
+
+.flashcard-nav {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.flashcard-progress {
+  font-size: 12px;
+  color: rgba(255,255,255,0.65);
+}
+
+/* tiny "next card" motion */
+.flashcard-anim {
+  animation: flashcardIn 220ms ease-out;
+}
+
+@keyframes flashcardIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

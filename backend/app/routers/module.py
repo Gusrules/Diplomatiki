@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
+from datetime import datetime, timezone
 from app.db import get_db
 from app.models.module import Module as ModuleModel
 from app.models.subject import Subject as SubjectModel
@@ -50,3 +50,24 @@ def get_module(module_id: int, db: Session = Depends(get_db)):
     if not m:
         raise HTTPException(status_code=404, detail="Module not found")
     return m
+
+@router.delete("/{module_id}", response_model=dict)
+def delete_module(
+    module_id: int,
+    db: Session = Depends(get_db),
+    _s = Depends(require_teacher),
+):
+    m = (
+        db.query(ModuleModel)
+        .filter(ModuleModel.id == module_id)
+        .filter(ModuleModel.deleted == False)  # noqa
+        .first()
+    )
+    if not m:
+        raise HTTPException(status_code=404, detail="Module not found")
+
+    m.deleted = True
+    m.deleted_at = datetime.now(timezone.utc)
+    db.add(m)
+    db.commit()
+    return {"ok": True, "id": module_id}

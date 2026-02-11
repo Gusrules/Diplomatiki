@@ -31,10 +31,39 @@ async function request(path, options = {}) {
   return data;
 }
 
+async function requestForm(path, formData) {
+  const token = getToken();
+
+  const res = await fetch(`${BASE}${path}`, {
+    method: "POST",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+
+  const text = await res.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = text;
+  }
+
+  if (!res.ok) {
+    const msg =
+      (data && data.detail && (typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail))) ||
+      `HTTP ${res.status}`;
+    throw new Error(msg);
+  }
+  return data;
+}
+
+
 export const api = {
 
-  login: ({ role, email, password }) =>
-    request(`/auth/login`, { method: "POST", body: JSON.stringify({ role, email, password }) }),
+  login: ({ email, password }) =>
+    request(`/auth/login`, { method: "POST", body: JSON.stringify({ email, password }) }),
 
 
 me: () => request(`/auth/me`),
@@ -49,6 +78,36 @@ logout: () => request(`/auth/logout`, { method: "POST" }),
     return (all || []).find((s) => s.id === id) || null;
   },
 
+  createSubject: ({ name, description = "" }) =>
+    request(`/subjects/`, {
+      method: "POST",
+      body: JSON.stringify({ name, description }),
+    }),
+
+  deleteSubject: (subjectId) =>
+    request(`/subjects/${subjectId}`, { method: "DELETE" }),
+
+  //register student
+  registerStudent: ({ name, email, password }) =>
+    request(`/auth/register`, { method: "POST", body: JSON.stringify({ name, email, password }) }),
+
+  //upload content
+  uploadResource: ({ module_id, type, title, uploaded_by, file }) => {
+    const fd = new FormData();
+    fd.append("module_id", String(module_id));
+    fd.append("type", type);
+    fd.append("title", title);
+    if (uploaded_by !== undefined && uploaded_by !== null) fd.append("uploaded_by", String(uploaded_by));
+    fd.append("file", file);
+    return requestForm(`/resources/upload`, fd);
+  },
+
+  //change pass
+  changePassword: ({ current_password, new_password }) =>
+    request(`/auth/change-password`, {
+      method: "POST",
+      body: JSON.stringify({ current_password, new_password }),
+    }),
 
   // modules
   listModulesBySubject: (subjectId) => request(`/modules/?subject_id=${subjectId}`),
@@ -58,11 +117,13 @@ logout: () => request(`/auth/logout`, { method: "POST" }),
       method: "POST",
       body: JSON.stringify({ subject_id, title, description }),
     }),
+  deleteModule: (moduleId) =>
+  request(`/modules/${moduleId}`, { method: "DELETE" }),
 
   // resources
   listResources: (moduleId) => request(`/resources/?module_id=${moduleId}`),
   getResource: (resourceId) => request(`/resources/${resourceId}`),
-  createResource: ({ module_id, type, title, file_path = "generated", file_type = "txt", uploaded_by = 1 }) =>
+  createResource: ({ module_id, type, title, file_path = "generated", file_type = "txt", uploaded_by = null }) =>
     request(`/resources/`, {
       method: "POST",
       body: JSON.stringify({ module_id, type, title, file_path, file_type, uploaded_by }),
@@ -72,6 +133,16 @@ logout: () => request(`/auth/logout`, { method: "POST" }),
       method: "PATCH",
       body: JSON.stringify({ content }),
     }),
+
+  deleteResource: (resourceId) =>
+    request(`/resources/${resourceId}`, { method: "DELETE" }),
+
+  patchResourceTitle: (resourceId, title) =>
+    request(`/resources/${resourceId}/title`, {
+      method: "PATCH",
+      body: JSON.stringify({ title }),
+    }),
+
 
   // questions
   // Teacher lists (with status filter)
@@ -123,10 +194,20 @@ logout: () => request(`/auth/logout`, { method: "POST" }),
   },
 
   myEnrolledSubjectIds: (userId) => request(`/enrollments/my-subjects?user_id=${userId}`),
-  enroll: ({ user_id, subject_id }) =>
-    request(`/enrollments/`, { method: "POST", body: JSON.stringify({ user_id, subject_id }) }),
+  enroll: ({ user_id, subject_id, invite_code = null }) =>
+    request(`/enrollments/`, {
+      method: "POST",
+      body: JSON.stringify({ user_id, subject_id, invite_code }),
+    }),
   unenroll: ({ user_id, subject_id }) =>
     request(`/enrollments/?user_id=${user_id}&subject_id=${subject_id}`, { method: "DELETE" }),
+
+  // teacher patch
+  updateSubjectAccess: (subjectId, payload) =>
+    request(`/subjects/${subjectId}/access`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
 
   // attempts
   submitAttempt: (payload) => request(`/attempts/submit`, { method: "POST", body: JSON.stringify(payload) }),
@@ -139,6 +220,23 @@ logout: () => request(`/auth/logout`, { method: "POST" }),
 
   // stats
   teacherSubjectSummary: (subjectId) => request(`/reports/teacher/subject/${subjectId}/summary`),
+  teacherSubjectTimeline: (subjectId, days = 14) =>
+  request(`/reports/teacher/subject/${subjectId}/timeline?days=${days}`),
+
+  teacherMostWrongQuestions: (subjectId, limit = 5) =>
+    request(`/reports/teacher/subject/${subjectId}/most-wrong?limit=${limit}`),
+
+  teacherAnswerDistribution: (questionId) =>
+    request(`/reports/teacher/question/${questionId}/answer-distribution`),
+
+  teacherSubjectDistributions: (subjectId) =>
+    request(`/reports/teacher/subject/${subjectId}/answer-distribution`),
+
+  // progress
+  studentSubjectsProgress: (userId) => request(`/reports/student/${userId}/subjects`),
+  studentModulesProgress: (userId, subjectId) =>
+    request(`/reports/student/${userId}/subject/${subjectId}/modules`),
+
 
   //teacherSubjects
   teacherSubjects: (teacherId) => request(`/subjects/teacher?teacher_id=${teacherId}`),

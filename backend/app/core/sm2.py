@@ -17,16 +17,17 @@ from datetime import date, timedelta
 
 def sm2_update(ef: float, repetitions: int, interval: int, quality: int):
     """
-    Επιστρέφει: (new_ef, new_repetitions, new_interval, next_review_date)
+    Returns: (new_ef, new_repetitions, new_interval_days, next_review_date)
+    quality: 0 λάθος, 1 σωστό
     """
     if quality not in (0, 1):
         raise ValueError("quality πρέπει να είναι 0 (λάθος) ή 1 (σωστό)")
 
     if quality == 0:
         repetitions = 0
-        interval = 1  # ξαναβλέπουμε την ερώτηση αύριο
+        interval = 1  # αύριο
         ef = max(1.3, ef - 0.3)
-    else:  # quality == 1
+    else:
         repetitions += 1
         if repetitions == 1:
             interval = 2
@@ -34,11 +35,11 @@ def sm2_update(ef: float, repetitions: int, interval: int, quality: int):
             interval = 6
         else:
             interval = round(interval * ef)
-
         ef = ef + 0.1
 
     next_review = date.today() + timedelta(days=interval)
     return ef, repetitions, interval, next_review
+
 
 
 # ------------------------

@@ -4,6 +4,7 @@ from datetime import datetime
 class EnrollmentCreate(BaseModel):
     user_id: int
     subject_id: int
+    invite_code: str | None = None
 
 class EnrollmentOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)

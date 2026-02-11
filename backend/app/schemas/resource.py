@@ -32,3 +32,8 @@ class ResourceOutDetail(ResourceOut):
 
 class ResourceContentUpdate(BaseModel):
     content: str
+
+
+class ResourceTitleUpdate(BaseModel):
+    title: str
+

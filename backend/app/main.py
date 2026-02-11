@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from fastapi.openapi.models import APIKey, APIKeyIn
+from fastapi.openapi.utils import get_openapi
 from app.db import engine
 from app.db_base import Base
 
@@ -20,6 +22,17 @@ from app.routers import enrollment as enrollment_router
 from app.routers import auth as auth_router
 from app.routers import dev_seed as dev_seed_router
 from app.routers import dev_reset_passwords as dev_reset_passwords_router
+from app.routers import assessment as assessment_router
+from app.routers import notifications as notifications_router
+from app.routers import question_moderation as question_moderation_router
+from app.routers import recommendations as recommendations_router
+from app.routers import questions_quality as questions_quality
+from app.routers import teacher_notifications as teacher_notifications_router
+from fastapi.staticfiles import StaticFiles
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+
 
 
 
@@ -31,6 +44,25 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    # πιάσε τα πρώτα 1-2 errors σε φιλικό text
+    errors = exc.errors()
+    msgs = []
+    for e in errors[:3]:
+        loc = " → ".join([str(x) for x in e.get("loc", []) if x != "body"])
+        msg = e.get("msg", "Invalid input")
+        if loc:
+            msgs.append(f"{loc}: {msg}")
+        else:
+            msgs.append(msg)
+
+    return JSONResponse(
+        status_code=422,
+        content={"detail": " | ".join(msgs)},
+    )
 
 @app.on_event("startup")
 def on_startup():
@@ -53,6 +85,13 @@ app.include_router(enrollment_router.router)
 app.include_router(auth_router.router)
 app.include_router(dev_seed_router.router)
 app.include_router(dev_reset_passwords_router.router)
+app.include_router(assessment_router.router)
+app.include_router(notifications_router.router)
+app.include_router(question_moderation_router.router)
+app.include_router(recommendations_router.router)
+app.include_router(questions_quality.router)
+app.include_router(teacher_notifications_router.router)
+
 
 @app.get("/")
 def home():

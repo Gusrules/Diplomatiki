@@ -1,11 +1,9 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../lib/api.js";
 import { setSession } from "../lib/session.js";
-import { useLocation } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 
 export default function LoginPage() {
-  const [role, setRoleState] = useState("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -16,7 +14,7 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       setErr("");
-      const out = await api.login({ role, email, password });
+      const out = await api.login({ email, password });
       setSession(out); // token, role, user_id, name
       
       const backTo = loc.state?.from;
@@ -32,13 +30,6 @@ export default function LoginPage() {
       <h2 style={{ marginTop: 0 }}>Login</h2>
 
       <form onSubmit={submit} style={{ display: "grid", gap: 10 }}>
-        <label>
-          Role:
-          <select value={role} onChange={(e) => setRoleState(e.target.value)} style={{ width: "100%" }}>
-            <option value="student">student</option>
-            <option value="teacher">teacher</option>
-          </select>
-        </label>
 
         <label>
           Email:
@@ -60,6 +51,9 @@ export default function LoginPage() {
         <button className="btn btn-primary" type="submit" disabled={!email || !password}>
           Continue
         </button>
+        <div style={{ marginTop: 8, color: "rgba(255,255,255,.7)" }}>
+          New student? <Link to="/register">Create an account</Link>
+        </div>
       </form>
     </div>
   );

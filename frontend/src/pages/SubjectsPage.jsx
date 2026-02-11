@@ -11,6 +11,11 @@ export default function SubjectsPage() {
   const [subjects, setSubjects] = useState([]);
   const [enrolledIds, setEnrolledIds] = useState([]);
   const [err, setErr] = useState("");
+  const [inviteCodes, setInviteCodes] = useState({}); // { [subjectId]: "CODE" }
+
+  function setCode(subjectId, v) {
+    setInviteCodes((prev) => ({ ...prev, [subjectId]: v }));
+  }
 
   async function refresh() {
     try {
@@ -41,9 +46,9 @@ export default function SubjectsPage() {
     [subjects, enrolledIds]
   );
 
-  async function enroll(subjectId) {
+  async function enroll(subjectId, inviteCode = null) {
     try {
-      await api.enroll({ user_id: userId, subject_id: subjectId });
+      await api.enroll({ user_id: userId, subject_id: subjectId, invite_code: inviteCode });
       await refresh();
     } catch (e) {
       setErr(e.message);
@@ -98,16 +103,50 @@ export default function SubjectsPage() {
             <div style={{ color: "#666" }}>No more subjects available.</div>
           ) : (
             <div style={{ display: "grid", gap: 10 }}>
-              {exploreSubjects.map((s) => (
-                <div key={s.id} className="card">
-                  <div style={{ fontWeight: 900 }}>{s.name}</div>
-                  <div style={{ marginTop: 10 }}>
-                    <button className="btn btn-primary" onClick={() => enroll(s.id)}>
-                      Enroll
-                    </button>
+              {exploreSubjects.map((s) => {
+                const mode = (s.access_mode || "public").toLowerCase();
+                const isPrivate = mode === "private";
+                const isInvite = mode === "invite";
+
+                return (
+                  <div key={s.id} className="card">
+                    <div style={{ fontWeight: 900, display: "flex", gap: 10, alignItems: "center" }}>
+                      <span>{s.name}</span>
+                      <span className="badge">
+                        {mode === "public" ? "Public" : mode === "private" ? "Private" : "Invite"}
+                      </span>
+                    </div>
+
+                    {isInvite && (
+                      <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+                        <input
+                          value={inviteCodes[s.id] || ""}
+                          onChange={(e) => setCode(s.id, e.target.value)}
+                          placeholder="Invite code"
+                        />
+                      </div>
+                    )}
+
+                    <div style={{ marginTop: 10 }}>
+                      <button
+                        className="btn btn-primary"
+                        disabled={isPrivate || (isInvite && !(inviteCodes[s.id] || "").trim())}
+                        onClick={() =>
+                          enroll(s.id, inviteCodes[s.id]) // θα φτιάξουμε enroll να δέχεται code
+                        }
+                      >
+                        Enroll
+                      </button>
+
+                      {isPrivate && (
+                        <div style={{ marginTop: 8, color: "rgba(255,255,255,.65)" }}>
+                          This subject is private.
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

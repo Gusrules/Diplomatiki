@@ -9,10 +9,9 @@ class Attempt(Base):
     user_id = Column(Integer, ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
     question_id = Column(Integer, ForeignKey("questions.id", ondelete="CASCADE"), nullable=False)
     quiz_id = Column(Integer, ForeignKey("quizzes.id", ondelete="CASCADE"), nullable=False)
-
+    selected_index = Column(Integer, nullable=True)
     is_correct = Column(Boolean, nullable=False)
     response_time = Column(Integer, nullable=True)
-
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     deleted = Column(Boolean, default=False)
     deleted_at = Column(DateTime(timezone=True), nullable=True)

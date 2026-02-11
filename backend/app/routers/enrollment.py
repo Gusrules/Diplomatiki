@@ -10,10 +10,20 @@ router = APIRouter(prefix="/enrollments", tags=["Enrollments"])
 
 @router.post("/", response_model=EnrollmentOut)
 def enroll(payload: EnrollmentCreate, db: Session = Depends(get_db)):
-    # subject exists?
     subj = db.query(SubjectModel).filter(SubjectModel.id == payload.subject_id).first()
     if not subj:
         raise HTTPException(status_code=404, detail="Subject not found")
+
+    # ✅ Access control
+    mode = (getattr(subj, "access_mode", None) or "public").lower()
+
+    if mode == "private":
+        raise HTTPException(status_code=403, detail="This subject is private")
+
+    if mode == "invite":
+        code = (payload.invite_code or "").strip()
+        if not code or code != (subj.invite_code or ""):
+            raise HTTPException(status_code=403, detail="Invalid invite code")
 
     # already enrolled?
     existing = (
@@ -29,6 +39,7 @@ def enroll(payload: EnrollmentCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(e)
     return e
+
 
 @router.delete("/", response_model=dict)
 def unenroll(user_id: int, subject_id: int, db: Session = Depends(get_db)):

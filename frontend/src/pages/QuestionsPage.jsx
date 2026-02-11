@@ -100,7 +100,7 @@ export default function QuestionsPage({ mode }) {
       await api.editQuestion(editId, payload);
       cancelEdit();
       await load();
-      setErr("OK: saved. (Question is now pending again for re-approval)");
+      setErr("OK: saved. Question is now Approved");
     } catch (e) {
       setErr(e.message);
     }
@@ -172,12 +172,16 @@ export default function QuestionsPage({ mode }) {
                 <StatusBadge status={q.status} />
                 <div style={{ marginLeft: "auto", display: "flex", gap: 10, flexWrap: "wrap" }}>
                   <button className="btn" onClick={() => startEdit(q)}>Edit</button>
-                  <button className="btn btn-primary" onClick={() => approve(q.id)} disabled={q.status === "approved"}>
-                    Approve
-                  </button>
-                  <button className="btn btn-danger" onClick={() => reject(q.id)} disabled={q.status === "rejected"}>
-                    Reject
-                  </button>
+                  {q.status !== "approved" && (
+                    <button className="btn btn-primary" onClick={() => approve(q.id)} disabled={q.status === "approved"}>
+                      Approve
+                    </button>
+                  )}
+                  {q.status !== "rejected" && (
+                    <button className="btn btn-danger" onClick={() => reject(q.id)} disabled={q.status === "rejected"}>
+                      Reject
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -229,7 +233,7 @@ export default function QuestionsPage({ mode }) {
                   </label>
 
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                    <button className="btn btn-primary" onClick={saveEdit}>Save (→ pending)</button>
+                    <button className="btn btn-primary" onClick={saveEdit}>Save</button>
                     <button className="btn" onClick={cancelEdit}>Cancel</button>
                   </div>
                 </div>

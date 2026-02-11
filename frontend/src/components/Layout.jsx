@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { getRole, getUserId, getName, logout } from "../lib/session.js";
+import { api } from "../lib/api.js";
 
 const shell = { maxWidth: 1100, margin: "0 auto", width: "100%" };
 
@@ -128,6 +129,7 @@ async function onLogout() {
                 <nav style={{ display: "flex", gap: 6 }}>
                   <NavLink to="/t/home">Dashboard</NavLink>
                   <NavLink to="/t/subjects">My subjects</NavLink>
+                  <NavLink to="/t/reports">Reports</NavLink>
                 </nav>
               )}
             </div>
@@ -138,6 +140,7 @@ async function onLogout() {
                 <>
                   <RoleBadge role={role} />
                   <Avatar name={name} />
+                  <Link className="btn" to="/change-password">Change password</Link>
                   <button className="btn" onClick={onLogout}>
                     Logout
                   </button>

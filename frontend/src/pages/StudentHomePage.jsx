@@ -11,19 +11,24 @@ export default function StudentHomePage() {
 
   const [subjects, setSubjects] = useState([]);
   const [enrolledIds, setEnrolledIds] = useState([]);
+  const [progress, setProgress] = useState([]);  
   const [err, setErr] = useState("");
   const [dueToday, setDueToday] = useState(null);
 
   async function load() {
     try {
       setErr("");
-      const [all, mine, sum] = await Promise.all([
+
+      const [all, mine, sum, prog] = await Promise.all([
         api.listSubjects(),
         api.myEnrolledSubjectIds(userId),
         api.reviewSummary(userId),
+        api.studentSubjectsProgress(userId),
       ]);
+
       setSubjects(all || []);
       setEnrolledIds(mine || []);
+      setProgress(prog || []);
       setDueToday(sum?.due_today ?? 0);
     } catch (e) {
       setErr(e.message);
@@ -39,6 +44,12 @@ export default function StudentHomePage() {
     () => subjects.filter((s) => enrolledIds.includes(s.id)),
     [subjects, enrolledIds]
   );
+
+  const progMap = useMemo(() => {
+    const m = new Map();
+    (progress || []).forEach((p) => m.set(p.subject_id, p));
+    return m;
+  }, [progress]);
 
   return (
     <div style={{ display: "grid", gap: 12 }}>
@@ -75,21 +86,33 @@ export default function StudentHomePage() {
         </div>
       ) : (
         <div style={{ display: "grid", gap: 10 }}>
-          {mySubjects.map((s) => (
-            <div
-              key={s.id}
-              className="card"
-              style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
-            >
-              <div>
-                <div style={{ fontWeight: 900 }}>{s.name}</div>
-                <div style={{ color: "#666" }}>{s.description || ""}</div>
+          {mySubjects.map((s) => {
+            const p = progMap.get(s.id);
+
+            return (
+              <div
+                key={s.id}
+                className="card"
+                style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+              >
+                <div>
+                  <div style={{ fontWeight: 900 }}>{s.name}</div>
+                  <div style={{ color: "#666" }}>{s.description || ""}</div>
+
+                  <div style={{ color: "#666", marginTop: 6 }}>
+                    Level: <b>{p?.level?.toFixed?.(1) ?? "—"}</b> •{" "}
+                    Accuracy: <b>{Math.round((p?.accuracy ?? 0) * 100)}%</b> •{" "}
+                    Attempts: <b>{p?.attempts_count ?? 0}</b> •{" "}
+                    Due reviews: <b>{p?.due_reviews ?? 0}</b>
+                  </div>
+                </div>
+
+                <Link className="btn btn-primary" to={`/subject/${s.id}`}>
+                  Open
+                </Link>
               </div>
-              <Link className="btn btn-primary" to={`/subject/${s.id}`}>
-                Open
-              </Link>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

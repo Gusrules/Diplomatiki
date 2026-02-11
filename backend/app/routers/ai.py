@@ -97,8 +97,8 @@ Rules:
             subject_id=data.subject_id,
             module_id=data.module_id,
             prompt=q["prompt"],
-            choices=q["choices"],
-            correct_index=q["correct_index"],
+            choices=choices,
+            correct_index=ci,
             difficulty_score=5.0,
         )
         db.add(question)
@@ -200,8 +200,8 @@ Rules:
             module_id=module.id,
             resource_id=res.id, 
             prompt=q["prompt"],
-            choices=q["choices"],
-            correct_index=q["correct_index"],
+            choices=choices,
+            correct_index=ci,
             difficulty_score=5.0,
         )
         db.add(question)

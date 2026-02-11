@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, event
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.db_base import Base
@@ -18,3 +18,4 @@ class Module(Base):
 
     # Relationship (backref from Subject not required yet)
     # Questions, Resources, etc. will connect here later
+

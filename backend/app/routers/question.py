@@ -164,8 +164,8 @@ def edit_question(question_id: int, data: QuestionUpdate, db: Session = Depends(
     q.correct_index = data.correct_index
     q.updated_at = func.now()
 
-    # IMPORTANT: edit => back to pending (needs re-approval)
-    q.status = "pending"
+    # IMPORTANT: edit => approved
+    q.status = "approved"
 
     db.add(q)
     db.commit()

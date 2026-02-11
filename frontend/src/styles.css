@@ -68,6 +68,17 @@ input, textarea, select {
   padding: 10px 12px;
   outline: none;
 }
+
+/*
+  Quiz UI fix:
+  The global `input { width: 100% }` rule is great for text inputs,
+  but it breaks radio/checkbox alignment (they become full-width).
+*/
+input[type="radio"],
+input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+}
 textarea { min-height: 160px; resize: vertical; }
 
 .h2 { font-size: 22px; margin: 0 0 10px; }

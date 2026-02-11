@@ -1,0 +1,1 @@
+Union combines elements, intersection keeps common ones.

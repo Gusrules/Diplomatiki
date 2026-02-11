@@ -41,12 +41,12 @@ class AttemptSubmitAnswersIn(BaseModel):
     quiz_id: int
     answers: List[AttemptAnswerChoiceIn]
 
-
 class AttemptResultQuestionChoice(BaseModel):
     question_id: int
     selected_index: int
     correct_index: int
     is_correct: bool
+    explanation: str | None = None
 
 
 class AttemptSubmitAnswersResult(BaseModel):

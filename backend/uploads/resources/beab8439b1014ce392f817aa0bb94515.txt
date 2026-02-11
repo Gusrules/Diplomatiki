@@ -1,0 +1,7 @@
+This is a random text file.
+
+Im using it to test a function i just created. 
+
+1) Hello World
+
+2) What is 2+2 ?

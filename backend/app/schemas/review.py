@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import Any
+from typing import Any, Optional
+
 
 class ReviewQuestionOut(BaseModel):
     question_id: int
@@ -7,14 +8,29 @@ class ReviewQuestionOut(BaseModel):
     choices: Any
     correct_index: int
 
+    # stage: new | learning | review
+    status: str
+
+    # computed
+    is_due: bool
+    next_review_at: Optional[str] = None
+
+
 class ReviewSubmitIn(BaseModel):
     user_id: int
     question_id: int
     quality: int  # 0=λάθος, 1=σωστό
 
+
 class ReviewSubmitOut(BaseModel):
     question_id: int
-    ef: float
+    easiness_factor: float
     repetitions: int
-    interval: int
-    next_review: str  # ISO date
+    interval_days: int
+
+    # stage: new | learning | review
+    status: str
+
+    # computed
+    is_due: bool
+    next_review_at: str | None

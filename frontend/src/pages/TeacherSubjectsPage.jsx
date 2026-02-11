@@ -8,6 +8,8 @@ export default function TeacherSubjectsPage() {
   const [subjects, setSubjects] = useState([]);
   const [err, setErr] = useState("");
   const teacherId = getUserId();
+  const [newName, setNewName] = useState("");
+  const [newDesc, setNewDesc] = useState("");
 
   async function load() {
     try {
@@ -21,6 +23,31 @@ export default function TeacherSubjectsPage() {
     }
   }
 
+  async function createSubject() {
+    try {
+      setErr("");
+      await api.createSubject({ name: newName.trim(), description: newDesc.trim() });
+      setNewName("");
+      setNewDesc("");
+      await load(); // ή refresh() ανάλογα πώς το λέγεις
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
+
+  async function deleteSubject(s) {
+    try {
+      setErr("");
+      const ok = window.confirm(`Delete subject "${s.name}"?`);
+      if (!ok) return;
+
+      await api.deleteSubject(s.id);
+      await load(); // ή refresh()
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
+
   useEffect(() => {
     load();
   }, [teacherId]);
@@ -28,6 +55,30 @@ export default function TeacherSubjectsPage() {
   return (
     <div style={{ display: "grid", gap: 12 }}>
       <h2>My Subjects</h2>
+
+      <div className="card" style={{ display: "grid", gap: 10 }}>
+        <div style={{ fontWeight: 900 }}>Create subject</div>
+
+        <input
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          placeholder="Subject name"
+        />
+
+        <input
+          value={newDesc}
+          onChange={(e) => setNewDesc(e.target.value)}
+          placeholder="Description (optional)"
+        />
+
+        <button
+          className="btn btn-primary"
+          onClick={createSubject}
+          disabled={!newName.trim()}
+        >
+          Create
+        </button>
+      </div>
 
       {subjects.length === 0 ? (
         <div className="card">
@@ -51,9 +102,17 @@ export default function TeacherSubjectsPage() {
                 <div style={{ fontWeight: 900 }}>{s.name}</div>
                 <div style={{ color: "#666" }}>{s.description || ""}</div>
               </div>
-              <Link className="btn btn-primary" to={`/t/subject/${s.id}`}>
-                Open
-              </Link>
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <Link className="btn" to={`/t/subject/${s.id}/stats`} style={{ color: "#ffffff" }}>
+                  View Statistics
+                </Link>
+                <Link className="btn btn-primary" to={`/t/subject/${s.id}`}>
+                  Open
+                </Link>
+                <button className="btn btn-danger" onClick={() => deleteSubject(s)}>
+                  Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>

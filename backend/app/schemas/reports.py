@@ -45,3 +45,10 @@ class TeacherSubjectSummaryOut(BaseModel):
     attempts_count: int
     accuracy: float
     questions_total: int
+
+class TeacherModuleSummaryOut(BaseModel):
+    module_id: int
+    module_title: str
+    attempts_count: int
+    accuracy: float
+    unique_students: int
