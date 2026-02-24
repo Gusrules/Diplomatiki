@@ -28,7 +28,6 @@ export default function ResourcesPage() {
   const [isGenFlashcards, setIsGenFlashcards] = useState(false);
 
 
-
   const studyGuides = useMemo(
     () => items.filter((x) => x.type === "study_guide"),
     [items]
@@ -347,7 +346,7 @@ export default function ResourcesPage() {
                     <div style={{ fontWeight: 900 }}>
                       {r.title}
                       <span style={{ marginLeft: 10, fontSize: 12, color: "rgba(255,255,255,.55)" }}>
-                        #{r.id} • {r.type}
+                        {r.type}
                       </span>
                     </div>
 

@@ -19,6 +19,16 @@ export default function ReviewPage() {
 
   const current = useMemo(() => items[idx] || null, [items, idx]);
 
+  function letter(i) {
+    return String.fromCharCode(65 + Number(i));
+  }
+
+  const correctIndex =
+    current?.correct_index ??
+    current?.correct_choice_index ??
+    current?.answer_index ??
+    null;
+
   async function load() {
     try {
       setErr("");
@@ -57,17 +67,12 @@ export default function ReviewPage() {
       if (!current) return;
       if (selected === null) throw new Error("Choose an answer first.");
 
-      const correctIndex =
-        current.correct_index ??
-        current.correct_choice_index ??
-        current.answer_index ??
-        null;
-
       if (correctIndex === null || correctIndex === undefined) {
         throw new Error(
           "Review endpoint did not return correct_index. Add correct_index to /review/today output."
         );
       }
+
 
       const ok = Number(selected) === Number(correctIndex);
       setChecked(true);
@@ -135,18 +140,42 @@ export default function ReviewPage() {
           <div style={{ fontWeight: 800 }}>{current?.prompt}</div>
 
           <div style={{ display: "grid", gap: 8 }}>
-            {(current?.choices || []).map((c, i) => (
-              <label key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <input
-                  type="radio"
-                  name="review-choice"
-                  disabled={checked}
-                  checked={selected === i}
-                  onChange={() => setSelected(i)}
-                />
-                <span>{c}</span>
-              </label>
-            ))}
+            {(current?.choices || []).map((c, i) => {
+              const showCorrectHighlight =
+                checked && correctIndex !== null && Number(i) === Number(correctIndex);
+
+              const showWrongHighlight =
+                checked && selected !== null && Number(i) === Number(selected) && isCorrect === false;
+
+              return (
+                <label
+                  key={i}
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    padding: "6px 8px",
+                    borderRadius: 10,
+                    border: "1px solid rgba(255,255,255,.08)",
+                    background: showCorrectHighlight
+                      ? "rgba(34,197,94,.18)" // σωστή επιλογή
+                      : showWrongHighlight
+                      ? "rgba(239,68,68,.18)" // λάθος επιλογή που διάλεξε
+                      : "transparent",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="review-choice"
+                    disabled={checked}
+                    checked={selected === i}
+                    onChange={() => setSelected(i)}
+                  />
+                  <span style={{ fontWeight: 800, width: 22 }}>{letter(i)}.</span>
+                  <span>{c}</span>
+                </label>
+              );
+            })}
           </div>
 
           {checked && (
@@ -154,6 +183,16 @@ export default function ReviewPage() {
               {isCorrect ? "✅ Correct" : "❌ Wrong"}
             </div>
           )}
+          
+          {checked && isCorrect === false && correctIndex !== null && (
+            <div style={{ color: "rgba(255,255,255,.85)", fontSize: 14 }}>
+              Correct answer:{" "}
+              <b>
+                {letter(correctIndex)}. {current?.choices?.[correctIndex]}
+              </b>
+            </div>
+          )}
+
 
           {checked && lastResult && (
             <div style={{ color: "rgba(255,255,255,.75)", fontSize: 13 }}>

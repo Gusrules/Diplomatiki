@@ -19,21 +19,24 @@ export default function StudentHomePage() {
     try {
       setErr("");
 
-      const [all, mine, sum, prog] = await Promise.all([
+      const [all, mine, todayRows, prog] = await Promise.all([
         api.listSubjects(),
         api.myEnrolledSubjectIds(userId),
-        api.reviewSummary(userId),
+        api.reviewToday(userId),                 
         api.studentSubjectsProgress(userId),
       ]);
 
       setSubjects(all || []);
       setEnrolledIds(mine || []);
       setProgress(prog || []);
-      setDueToday(sum?.due_today ?? 0);
+
+      const arr = Array.isArray(todayRows) ? todayRows : [];
+      setDueToday(arr.length);                  
     } catch (e) {
       setErr(e.message);
     }
   }
+
 
   useEffect(() => {
     load();

@@ -8,6 +8,7 @@ from app.models.question import Question
 from app.models.card_meta import CardMeta
 from app.schemas.review import ReviewQuestionOut, ReviewSubmitIn, ReviewSubmitOut
 from app.core.sm2 import sm2_update
+from sqlalchemy import func
 
 router = APIRouter(prefix="/review", tags=["Review"])
 
@@ -115,6 +116,22 @@ def review_today(user_id: int, db: Session = Depends(get_db)):
             )
         )
     return out
+
+@router.get("/today/count")
+def review_today_count(user_id: int, db: Session = Depends(get_db)):
+    today = date.today()
+
+    # Μετράμε ΜΟΝΟ due metas (ίδιο κριτήριο με /today)
+    due_count = (
+        db.query(func.count(CardMeta.id))
+        .filter(CardMeta.user_id == user_id)
+        .filter(CardMeta.deleted == False)  # noqa
+        .filter(CardMeta.next_review != None)  # noqa
+        .filter(CardMeta.next_review <= today)
+        .scalar()
+    )
+
+    return {"due_today": int(due_count or 0)}
 
 
 @router.get("/next", response_model=list[ReviewQuestionOut])
