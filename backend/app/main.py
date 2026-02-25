@@ -1,3 +1,4 @@
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI
 from fastapi.openapi.models import APIKey, APIKeyIn
 from fastapi.openapi.utils import get_openapi
@@ -39,7 +40,7 @@ from fastapi.exceptions import RequestValidationError
 app = FastAPI(openapi_url="/openapi.json", docs_url="/docs")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://localhost:3001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
